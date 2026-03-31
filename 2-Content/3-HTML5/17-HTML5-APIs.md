@@ -58,6 +58,26 @@ function showError(error) {
 </script>
 ```
 
+> **Code Explanation:**
+> - `navigator.geolocation` — Checks if the browser supports the Geolocation API. Most modern browsers do.
+> - `getCurrentPosition(successCallback, errorCallback)` — Asks the browser for the user's location. Takes two functions: one for success, one for error.
+> - `position.coords.latitude` and `position.coords.longitude` — The actual location coordinates (decimal degrees, e.g., 24.0667 for Mandsaur).
+> - The Google Maps link is constructed dynamically using template literals — `${lat},${lon}` inserts the coordinates into the URL.
+> - `error.code` — Returns 1 (permission denied), 2 (unavailable), or 3 (timeout). The `messages` object maps these to user-friendly messages.
+
+### HTTPS Requirement for Geolocation
+
+> ⚠️ **Important:** Modern browsers **require HTTPS** (secure connection) for the Geolocation API to work. If your website uses `http://` instead of `https://`, the browser will block location access.
+
+| Scenario | Geolocation Works? |
+|----------|-------------------|
+| `https://yoursite.com` | ✅ Yes |
+| `http://yoursite.com` | ❌ No (blocked by browser) |
+| `file:///C:/mypage.html` (local file) | ✅ Yes (for testing) |
+| `http://localhost` (local development) | ✅ Yes (exception for localhost) |
+
+> **For lab practice:** Opening HTML files directly from your computer (`file:///...`) will work. But when you deploy a website online, it **must** use HTTPS.
+
 ### Position Object Properties
 
 | Property | Description |
@@ -118,6 +138,14 @@ function clearNote() {
 </script>
 ```
 
+> **Code Explanation:**
+> - `document.getElementById('notepad').value` — Gets the text typed in the textarea.
+> - `localStorage.setItem('myNote', note)` — Stores the note with key `'myNote'`. Think of it like putting a labeled file in a drawer.
+> - `localStorage.getItem('myNote')` — Retrieves the note using the same key. Returns `null` if the key doesn't exist.
+> - `localStorage.removeItem('myNote')` — Deletes only the `'myNote'` item from storage.
+> - `alert('Note saved!')` — Shows a browser popup to confirm the action.
+> - **Key point:** Close the browser, reopen it, and click "Load" — your note is still there! localStorage persists until manually deleted.
+
 ### Web Storage Methods
 
 | Method | Purpose |
@@ -128,6 +156,107 @@ function clearNote() {
 | `clear()` | Remove ALL stored items |
 | `key(index)` | Get key name by index |
 | `length` | Number of stored items |
+
+### Storing Objects with JSON.stringify and JSON.parse
+
+localStorage can only store **strings**. If you try to store an object or array directly, it gets converted to `"[object Object]"` — which is useless. You must **convert objects to JSON strings** before storing them.
+
+```html
+<script>
+// Creating a student object
+var student = {
+    name: "Priya Sharma",
+    rollNo: "BCA2024-042",
+    city: "Mandsaur",
+    subjects: ["Web Technology", "Data Structures", "Mathematics"]
+};
+
+// ❌ WRONG: Storing object directly — saves as "[object Object]"
+// localStorage.setItem('student', student);
+
+// ✅ CORRECT: Convert object to JSON string first
+localStorage.setItem('student', JSON.stringify(student));
+
+// Retrieving: Parse the JSON string back to an object
+var savedStudent = JSON.parse(localStorage.getItem('student'));
+
+// Now you can access properties normally
+document.write("Name: " + savedStudent.name + "<br>");       // Priya Sharma
+document.write("City: " + savedStudent.city + "<br>");        // Mandsaur
+document.write("Subjects: " + savedStudent.subjects.join(", ")); // Web Technology, Data Structures, Mathematics
+</script>
+```
+
+> **Code Explanation:**
+> - `JSON.stringify(student)` — Converts the JavaScript object to a JSON string: `'{"name":"Priya Sharma","rollNo":"BCA2024-042",...}'`
+> - `localStorage.setItem('student', ...)` — Stores the JSON string with key `'student'`.
+> - `JSON.parse(localStorage.getItem('student'))` — Reads the JSON string from storage and converts it back into a JavaScript object.
+> - After parsing, you can access `savedStudent.name`, `savedStudent.city`, etc., just like a normal object.
+> - **Tip:** Always wrap `JSON.parse()` in a `try-catch` block in production code to handle corrupted data.
+
+### Storage Quota — How Much Can You Store?
+
+| Storage Type | Typical Limit | Notes |
+|-------------|--------------|-------|
+| localStorage | **5 MB** per origin | Some browsers allow up to 10 MB |
+| sessionStorage | **5 MB** per origin | Same limit as localStorage |
+| Cookies | **4 KB** per cookie | Much smaller! |
+
+> **What is "origin"?** An origin is the combination of protocol + domain + port. For example, `https://mu.ac.in` is one origin. All pages on `https://mu.ac.in` share the same 5 MB localStorage.
+
+**What happens if you exceed the limit?**
+The browser throws a `QuotaExceededError`. You should handle this:
+
+```javascript
+try {
+    localStorage.setItem('bigData', veryLargeString);
+} catch (e) {
+    if (e.name === 'QuotaExceededError') {
+        alert('Storage is full! Please clear some saved data.');
+    }
+}
+```
+
+### Security Implications — What NOT to Store
+
+> ⚠️ **NEVER store sensitive data in localStorage!**
+
+localStorage is vulnerable to **XSS (Cross-Site Scripting)** attacks. If an attacker injects malicious JavaScript into your page, they can read everything in localStorage.
+
+| Data Type | Safe to Store in localStorage? | Why? |
+|-----------|-------------------------------|------|
+| User preferences (theme, language) | ✅ Yes | Not sensitive |
+| Shopping cart items | ✅ Yes | Not sensitive |
+| Passwords | ❌ **NEVER** | XSS can steal them |
+| Authentication tokens (JWT) | ❌ **NEVER** | XSS can steal them for account takeover |
+| Aadhaar number / PAN card | ❌ **NEVER** | Sensitive personal data |
+| Credit/debit card details | ❌ **NEVER** | Financial data — extremely dangerous |
+
+> **Rule of Thumb:** Only store data in localStorage that you would be comfortable writing on a sticky note and leaving on your desk. If it's sensitive, use **secure HTTP-only cookies** or **server-side sessions** instead.
+
+### Storage Event — Cross-Tab Communication
+
+When one browser tab changes localStorage, **other tabs of the same website** can detect the change using the `storage` event. This is useful for syncing data across tabs.
+
+```html
+<script>
+// This runs in Tab 2 when Tab 1 changes localStorage
+window.addEventListener('storage', function(event) {
+    document.write("Key changed: " + event.key + "<br>");
+    document.write("Old value: " + event.oldValue + "<br>");
+    document.write("New value: " + event.newValue + "<br>");
+    document.write("Changed by page: " + event.url + "<br>");
+});
+</script>
+```
+
+> **Code Explanation:**
+> - `window.addEventListener('storage', ...)` — Listens for changes to localStorage made by **other tabs** (not the current tab).
+> - `event.key` — The key that was changed (e.g., `'myNote'`).
+> - `event.oldValue` — The previous value before the change.
+> - `event.newValue` — The new value after the change.
+> - `event.url` — The URL of the page that made the change.
+> - **Use case:** If a student has your website open in two tabs and saves a note in Tab 1, Tab 2 can automatically update to show the new note.
 
 ### sessionStorage Example
 
@@ -142,6 +271,13 @@ document.write(`<p>Page views this session: <strong>${views}</strong></p>`);
 document.write(`<p><em>Close the tab and reopen — count resets!</em></p>`);
 </script>
 ```
+
+> **Code Explanation:**
+> - `sessionStorage.getItem('pageViews') || 0` — Gets the current page view count. If it doesn't exist (first visit), defaults to `0`.
+> - `parseInt(views) + 1` — Converts the string to a number and adds 1. Remember, localStorage/sessionStorage stores **strings only**.
+> - `sessionStorage.setItem('pageViews', views)` — Saves the updated count.
+> - `document.write(...)` — Displays the count on the page. Template literals (backticks) allow embedding variables with `${views}`.
+> - **Key difference from localStorage:** This count resets when the tab is closed. Try it: refresh the page (count increases), then close and reopen the tab (count resets to 1).
 
 ---
 
@@ -229,6 +365,14 @@ document.write(`<p><em>Close the tab and reopen — count resets!</em></p>`);
 </body>
 </html>
 ```
+
+> **Code Explanation:**
+> - `draggable="true"` — Makes an element draggable. By default, only images and links are draggable.
+> - `ondragstart="drag(event)"` — When dragging starts, the `drag()` function stores the dragged element's ID using `event.dataTransfer.setData("text", event.target.id)`.
+> - `ondragover="allowDrop(event)"` — By default, elements **cannot** receive drops. `event.preventDefault()` in `allowDrop()` overrides this and allows dropping.
+> - `ondragenter` / `ondragleave` — Used to add/remove the `.over` CSS class, which changes the border color to green when an item hovers over the drop zone.
+> - `ondrop="drop(event)"` — When the item is dropped: `event.dataTransfer.getData("text")` retrieves the stored element ID. `document.getElementById(data)` finds the element. `event.currentTarget.appendChild(element)` moves the element into the drop zone.
+> - **CSS:** `.drag-item` uses `cursor: grab` to show a grab cursor. `.drop-zone` uses `dashed` border to indicate where items can be dropped. `.over` class provides visual feedback during drag.
 
 ### Drag and Drop Events
 

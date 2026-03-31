@@ -93,6 +93,157 @@ HTML5 is the **fifth and current version** of HTML, finalized in 2014 as a "Livi
 | `<mark>` | Highlighted text | Highlighter pen |
 | `<time>` | Date/time markup | Calendar entry |
 
+### `<section>` vs `<article>` — The Common Confusion
+
+Students often mix up `<section>` and `<article>`. Here is a simple way to remember:
+
+> **Think of it like a newspaper.** An `<article>` is a **complete news story** that makes sense on its own — you could cut it out and give it to a friend. A `<section>` is a **chapter or part** within a story — it only makes sense as part of something bigger.
+
+| Question to Ask | If **Yes** → Use | If **No** → Use |
+|----------------|-------------------|-----------------|
+| Can this content stand alone (e.g., shared on WhatsApp, posted on another site)? | `<article>` | `<section>` |
+| Does it have its own heading and makes complete sense independently? | `<article>` | `<section>` |
+| Is it just grouping related paragraphs under one topic? | `<section>` | Maybe `<div>` |
+
+**Real-world examples:**
+
+| Content | Correct Tag | Why? |
+|---------|------------|------|
+| A blog post on "Top 10 places in Mandsaur" | `<article>` | Self-contained, shareable |
+| The "History" section within that blog post | `<section>` | Part of the article, not independent |
+| A product review on Flipkart | `<article>` | Independent, complete content |
+| "Specifications" tab within that review | `<section>` | Grouped content within the review |
+| A student's profile card on the university website | `<article>` | Each card is self-contained |
+| The "Achievements" part within the profile | `<section>` | Part of the profile |
+
+### Nesting Rules — What Can Go Inside What?
+
+Semantic elements can be **nested** inside each other, but there are rules:
+
+```
+✅ VALID NESTING:
+
+<article>                      ← A blog post
+  <section>                    ← A chapter within the post
+    <p>Content here...</p>
+  </section>
+  <section>                    ← Another chapter
+    <p>More content...</p>
+  </section>
+</article>
+
+<section>                      ← A "Latest News" section
+  <article>                    ← Individual news story
+    <h3>News Title</h3>
+    <p>Story details...</p>
+  </article>
+  <article>                    ← Another news story
+    <h3>Another Title</h3>
+    <p>More details...</p>
+  </article>
+</section>
+
+❌ INVALID / BAD PRACTICE:
+
+<header>
+  <header>                     ← ❌ Cannot nest header inside header
+  </header>
+</header>
+
+<footer>
+  <header>                     ← ❌ Avoid header inside footer
+  </header>
+</footer>
+```
+
+**Quick nesting reference:**
+
+| Parent Element | Can Contain | Cannot Contain |
+|---------------|-------------|---------------|
+| `<article>` | `<section>`, `<header>`, `<footer>`, `<aside>`, other `<article>` | `<main>` |
+| `<section>` | `<article>`, `<header>`, `<footer>`, `<aside>` | `<main>` |
+| `<main>` | `<article>`, `<section>`, `<aside>` | Another `<main>` |
+| `<header>` | `<nav>`, most flow content | `<header>`, `<footer>`, `<main>` |
+| `<footer>` | `<nav>`, most flow content | `<header>`, `<footer>`, `<main>` |
+| `<aside>` | `<article>`, `<section>`, `<header>`, `<footer>` | `<main>` |
+
+> **Rule of Thumb:** There should be **only one `<main>`** per page, and `<main>` should not appear inside `<article>`, `<aside>`, `<header>`, or `<footer>`.
+
+### SEO Benefits — How Semantic HTML Improves Search Rankings
+
+> **Analogy:** Imagine Google's search bot as a **new student visiting Mandsaur University** for the first time. If the campus has clear signboards ("Library", "BCA Department", "Canteen"), the student finds everything quickly. If there are no signs — just numbered buildings — the student is lost. **Semantic HTML is like putting signboards on your website** for search engine bots.
+
+**How search engines use semantic elements:**
+
+| Semantic Element | What Google Understands |
+|-----------------|------------------------|
+| `<header>` | "This is the site's branding and top-level info" |
+| `<nav>` | "These are the main navigation links — important pages" |
+| `<main>` | "This is the primary content I should index and rank" |
+| `<article>` | "This is a complete, independent piece of content" |
+| `<h1>` inside `<article>` | "This is the main topic of this content" |
+| `<aside>` | "This is supplementary — not the main content" |
+| `<footer>` | "Contact info, copyright, less important links" |
+| `<time datetime="...">` | "This is a specific date — useful for news, events" |
+
+**Non-semantic vs Semantic — SEO comparison:**
+
+```html
+<!-- ❌ Non-semantic: Google sees a wall of <div> tags — no meaning -->
+<div id="header">
+  <div class="title">Raj's Sweet Shop - Mandsaur</div>
+</div>
+<div id="content">
+  <div class="post">Best Mawa Bati in Mandsaur...</div>
+</div>
+
+<!-- ✅ Semantic: Google clearly understands the page structure -->
+<header>
+  <h1>Raj's Sweet Shop - Mandsaur</h1>
+</header>
+<main>
+  <article>
+    <h2>Best Mawa Bati in Mandsaur</h2>
+    <p>Our shop has been serving authentic Mawa Bati since 1985...</p>
+    <time datetime="2026-01-15">January 15, 2026</time>
+  </article>
+</main>
+```
+
+> **Key Point:** Google has confirmed that using semantic HTML helps its bots understand your content better, which can lead to **rich snippets** (enhanced search results with dates, ratings, etc.) and better rankings.
+
+### Accessibility Benefits — How Screen Readers Use Semantic Elements
+
+> **Analogy:** A visually impaired student using a **screen reader** (like JAWS or NVDA software) cannot see the webpage. The screen reader reads aloud the content. **Semantic elements act like a map** — they tell the screen reader "this is navigation," "this is the main content," "this is a sidebar," so the user can **jump directly** to the section they want.
+
+**How screen readers use semantic elements:**
+
+| Element | Screen Reader Behavior |
+|---------|----------------------|
+| `<nav>` | Announces "Navigation region" — user can skip to it or skip past it |
+| `<main>` | Announces "Main content" — user can jump directly to main content |
+| `<header>` | Announces "Banner" — user knows this is the page header |
+| `<footer>` | Announces "Content info" — user knows this is the footer |
+| `<article>` | Announces "Article" — user knows this is a self-contained piece |
+| `<aside>` | Announces "Complementary" — user can skip sidebar content |
+| `<h1>` to `<h6>` | User can navigate by headings — like a table of contents |
+
+**Without semantic HTML**, a screen reader sees:
+```
+"div... div... div... div... link... div... text..."
+— No structure, no way to navigate!
+```
+
+**With semantic HTML**, a screen reader sees:
+```
+"Navigation region: 4 links — Home, About, Courses, Contact"
+"Main content: Article — About the Department"
+"Complementary: Quick Links — 3 links"
+"Content info: Copyright 2026 Mandsaur University"
+```
+
+> **Important:** In India, the **Rights of Persons with Disabilities Act, 2016** encourages accessible digital content. Using semantic HTML is a step toward making your websites accessible to all users.
+
 ---
 
 ## 3. Building a Page with Semantic HTML5
@@ -191,6 +342,22 @@ HTML5 is the **fifth and current version** of HTML, finalized in 2014 as a "Livi
 </html>
 ```
 
+> **Code Explanation:**
+> - `<!DOCTYPE html>` — Declares this as an HTML5 document (the simple HTML5 doctype).
+> - `<meta charset="UTF-8">` — Sets character encoding to UTF-8, supporting Hindi and other Indian language characters.
+> - `<meta name="viewport" ...>` — Makes the page responsive on mobile devices.
+> - `<header>` — Contains the university name and department — acts as the page banner.
+> - `<nav>` — Groups navigation links (About, Courses, Faculty, Contact) — screen readers identify this as the navigation region.
+> - `<main>` — Wraps the primary page content. Only one `<main>` per page.
+> - `<article>` — Each self-contained content block (About, Courses, Faculty) is an article. These could be extracted and still make sense on their own.
+> - `<section>` — Inside the "About" article, "Our Vision" and "Our Mission" are sections — they are thematic groupings within the article.
+> - `<time datetime="2015">` — Machine-readable date. Search engines and screen readers can understand this is a year.
+> - `<details>` and `<summary>` — Creates collapsible content for semester lists. The `open` attribute on Semester II means it starts expanded.
+> - `<figure>` and `<figcaption>` — Groups the HOD photo with its caption, semantically linking them.
+> - `<aside>` — Contains sidebar content (Quick Links, Upcoming Events) that is related but not the main content.
+> - `<footer>` — Contains copyright and contact information.
+> - `<address>` — Semantic tag specifically for contact information (address, email).
+
 ---
 
 ## 4. The `<details>` and `<summary>` Tags
@@ -208,6 +375,13 @@ Creates collapsible/expandable content — no JavaScript needed!
     <p>CSS stands for Cascading Style Sheets. It is used to style HTML elements.</p>
 </details>
 ```
+
+> **Code Explanation:**
+> - `<details>` — Creates a collapsible/expandable widget. By default, the content is hidden (collapsed).
+> - `<summary>` — The visible heading that the user clicks to expand/collapse. Think of it as the "question" in an FAQ.
+> - The `<p>` inside `<details>` is the hidden content that appears when the user clicks the summary.
+> - No JavaScript is needed — this is built-in browser functionality!
+> - **Tip:** Add the `open` attribute to `<details open>` if you want the content to start in the expanded state.
 
 ---
 
